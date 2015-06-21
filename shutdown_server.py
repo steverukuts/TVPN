@@ -7,11 +7,11 @@
 
 import SimpleHTTPServer
 import SocketServer
-from multiprocessing import Process
 from datetime import datetime, timedelta
 import time
 import sys
 import os
+import threading
 
 shutdown_delta = timedelta(minutes=5)
 shutdown_on = datetime.now() + shutdown_delta
@@ -50,7 +50,8 @@ class PingRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
 
 
 # Background thread: check to see if we need to halt the system.
-timer = Process(target=poll_timer)
+timer = threading.Thread(target=poll_timer)
+timer.daemon = True
 timer.start()
 
 # Main thread: run a web server to reset the timer
