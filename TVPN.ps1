@@ -241,6 +241,7 @@ Write-Host "connection and the instance will automatically terminate."
 while ($true)
 {
     $pingUrl = "http://$($instance.PublicIpAddress):8080/ping";
-    [void](Invoke-WebRequest $pingUrl -Method Post  -TimeoutSec 5);
+    $result = Invoke-WebRequest $pingUrl -Method Post  -TimeoutSec 5;
+    Write-Verbose $result.Content;
     Start-Sleep -Seconds 30;
 }

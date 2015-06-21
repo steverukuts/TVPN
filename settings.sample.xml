@@ -3,4 +3,6 @@
 	<accessKey></accessKey>
     <secretKey></secretKey>
     <region>us-east-1</region>
+	<ami>ami-d85e75b0</ami>
+	<type>m1.small</type>
 </config>

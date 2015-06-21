@@ -18,6 +18,8 @@ shutdown_on = datetime.now() + shutdown_delta
 
 def poll_timer():
     while True:
+        global shutdown_on
+
         if datetime.now() > shutdown_on:
             print "poll: Shutting down!"
             os.system("halt")
@@ -28,6 +30,8 @@ def poll_timer():
 
 class PingRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
     def do_POST(self):
+        global shutdown_on
+
         shutdown_on = datetime.now() + shutdown_delta
         print "web: Will now shut down on %s" % shutdown_on
 
@@ -37,6 +41,8 @@ class PingRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.wfile.writelines("ok - will shut down on %s" % shutdown_on)
 
     def do_GET(self):
+        global shutdown_on
+
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
