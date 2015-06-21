@@ -34,7 +34,7 @@ class PingRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.writelines("ok")
+        self.wfile.writelines("ok - will shut down on %s" % shutdown_on)
 
     def do_GET(self):
         self.send_response(200)

@@ -1,7 +1,8 @@
 param
 (
     $region = "us-east-1",
-    $ami = "ami-d85e75b0"
+    $ami = "ami-d85e75b0",
+    [switch] $notimeout
 )
 
 function Get-IPAddress
@@ -25,7 +26,7 @@ function Get-Password ($length = 20)
 
 function Get-SetupScript
 {
-    param ($user, $pass, $psk)
+    param ($user, $pass, $psk, $notimeout)
     
     $voodooVpnScript = (cat $PSScriptRoot\voodoo_vpn.sh | % {
         $_ -replace "^IPSEC_PSK.*", "IPSEC_PSK=$psk"  `
@@ -36,14 +37,20 @@ function Get-SetupScript
     $shutdownPath = "/usr/bin/shutdown_server.py";
     $shutdownScript = (cat $PSScriptRoot\shutdown_server.py) -join "`n";
 
-    return @("#!/bin/sh",
+    $commands = @("#!/bin/sh",
         "apt-get update",
         $voodooVpnScript,
         "cat << EOF > $shutdownPath",
         $shutdownScript,
         "EOF"
-        "chmod +x $shutdownPath",
-        "$shutdownPath&") -join "`n";
+        "chmod +x $shutdownPath");
+
+    if (!$notimeout)
+    {
+        $commands += "$shutdownPath&";
+    }
+
+    return $commands -join "`n";
 }
 
 function Add-EC2IngressRule
@@ -208,7 +215,7 @@ Set-AWSCredentials -AccessKey $settings.accessKey -SecretKey $settings.secretKey
 $user = Get-Password;
 $pass = Get-Password;
 $psk = Get-Password;
-$script = Get-SetupScript -user $user -pass $pass -psk $psk;
+$script = Get-SetupScript -user $user -pass $pass -psk $psk -notimeout $notimeout;
 
 $instanceId = LaunchVPNInstanceAndGetID -script $script;
 
