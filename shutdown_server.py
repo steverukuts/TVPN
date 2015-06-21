@@ -40,7 +40,7 @@ class PingRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-type", "text/plain")
         self.end_headers()
-        self.wfile.writelines("Only POST commands are accepted.")
+        self.wfile.writelines("will shut down on %s" % shutdown_on)
 
 
 # Background thread: check to see if we need to halt the system.
