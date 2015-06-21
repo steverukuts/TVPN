@@ -159,6 +159,25 @@ function WaitForInstance
     return $instance;
 }
 
+function WaitForServer
+{
+    param ($ip)
+    
+    while ($true)
+    {
+        Start-Sleep -Milliseconds 500;
+
+        try
+        {
+            [void](Invoke-WebRequest -Uri "http://$($ip):8080" -Method Get -TimeoutSec 5);
+            return;
+        }
+        catch
+        {
+        }
+    }   
+}
+
 function Configure-VPN
 {
     param ($ip, $psk)
@@ -194,13 +213,27 @@ $script = Get-SetupScript -user $user -pass $pass -psk $psk;
 $instanceId = LaunchVPNInstanceAndGetID -script $script;
 
 Write-Host "Instance launched with ID $($instanceId)";
-Write-Host "Waiting for instance to become ready.";
+Write-Host "Waiting for instance to launch...";
 
-$instance = WaitForInstance;
+$instance = WaitForInstance -id $instanceId;
 Write-Host "Instance has launched with IP $($instance.PublicIpAddress)";
 
 Write-Host "Configuring VPN connection";
 Configure-VPN -ip $instance.PublicIpAddress -psk $psk;
 
-echo "user: $user";
-echo "pass: $pass";
+Write-Host "Waiting for instance networking to become available...";
+WaitForServer -ip $instance.PublicIpAddress;
+
+Write-Host "Connecting to VPN...";
+&rasdial "TVPN" $user $pass
+
+Write-Host ""
+Write-Host "Connected. Close this window when you're done with the"
+Write-Host "connection and the instance will automatically terminate."
+
+while ($true)
+{
+    $pingUrl = "http://$($instance.PublicIpAddress):8080/ping";
+    [void](Invoke-WebRequest $pingUrl -Method Post  -TimeoutSec 5);
+    Start-Sleep -Seconds 30;
+}

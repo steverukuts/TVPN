@@ -36,6 +36,13 @@ class PingRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
         self.end_headers()
         self.wfile.writelines("ok")
 
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain")
+        self.end_headers()
+        self.wfile.writelines("Only POST commands are accepted.")
+
+
 # Background thread: check to see if we need to halt the system.
 timer = Process(target=poll_timer)
 timer.start()
