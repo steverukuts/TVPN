@@ -27,7 +27,7 @@ def poll_timer():
         time.sleep(30)
 
 class PingRequestHandler(SimpleHTTPServer.SimpleHTTPRequestHandler):
-    def do_GET(self):
+    def do_POST(self):
         shutdown_on = datetime.now() + shutdown_delta
         print "web: Will now shut down on %s" % shutdown_on
 

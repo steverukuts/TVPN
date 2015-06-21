@@ -33,9 +33,17 @@ function Get-SetupScript
            -replace "^VPN_PASSWORD.*", "VPN_PASSWORD=$pass"
     }) -join "`n";
 
+    $shutdownPath = "/usr/bin/shutdown_server.py";
+    $shutdownScript = (cat $PSScriptRoot\shutdown_server.py) -join "`n";
+
     return @("#!/bin/sh",
         "apt-get update",
-        "$voodooVpnScript") -join "`n";
+        $voodooVpnScript,
+        "cat << EOF > $shutdownPath",
+        $shutdownScript,
+        "EOF"
+        "chmod +x $shutdownPath",
+        "$shutdownPath&") -join "`n";
 }
 
 function Add-EC2IngressRule
@@ -151,6 +159,29 @@ function WaitForInstance
     return $instance;
 }
 
+function Configure-VPN
+{
+    param ($ip, $psk)
+
+    $connection = Get-VpnConnection "TVPN" `
+        -ErrorAction SilentlyContinue;
+
+    if ($connection)
+    {
+        Remove-VpnConnection "TVPN" -Force;
+    }
+
+    Add-VpnConnection -Name "TVPN" `
+        -ServerAddress $ip `
+        -TunnelType "L2TP" `
+        -L2tpPsk $psk `
+        -AuthenticationMethod "CHAP" `
+        -WarningAction SilentlyContinue `
+        -Force `
+        -RememberCredential;
+}
+
+
 $settings = ([xml](cat "$PSScriptRoot\settings.xml")).config;
 Set-DefaultAWSRegion $settings.region;
 Set-AWSCredentials -AccessKey $settings.accessKey -SecretKey $settings.secretKey;
@@ -168,7 +199,8 @@ Write-Host "Waiting for instance to become ready.";
 $instance = WaitForInstance;
 Write-Host "Instance has launched with IP $($instance.PublicIpAddress)";
 
-Write-Host "User: $user";
-Write-Host "Pass: $pass";
-Write-Host "PSK: $psk";
+Write-Host "Configuring VPN connection";
+Configure-VPN -ip $instance.PublicIpAddress -psk $psk;
 
+echo "user: $user";
+echo "pass: $pass";
