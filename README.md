@@ -12,8 +12,13 @@ Unlike a lot of cloud-based VPNs like this, this VPN will only cost money when
 you are using it. If you never use it again, you will have no AWS bill as all
 resources associated with it are cleared from your account.
 
-Here's how you use it:
+The downside however is that you will have to wait a couple of minutes for the
+VPN to launch. As you also have to give identifiable information to Amazon
+this is also not really suitable for the ultra-paranoid, and I would most
+certainly not recommend using this for torrenting.
 
+How you use it
+--------------
 1. Copy settings.sample.xml to settings.xml
 2. Update the configuration variables to specify your AWS API keys
 3. Specify what region you want and an AMI within the region (Ubuntu Trusty
@@ -21,8 +26,20 @@ Here's how you use it:
 4. Specify what instance type to use. You could use a micro instance on the free
    tier but I have found that they don't provide enough network speed.
 
-Here's how it works:
+Most users will need to apply the following registry fix in an elevated command
+prompt to make this work.
 
+```
+$path = "HKLM:\SYSTEM\CurrentControlSet\Services\PolicyAgent";
+Set-ItemProperty -Path $path -Name AssumeUDPEncapsulationContextOnSendRule -Value 2;
+```
+
+After applying this fix you will need to reboot your computer.
+
+Details are on the [Microsoft support site](https://support.microsoft.com/en-us/kb/926179).
+
+How it works
+------------
 1. Creates or modifies a security group. The security group is locked down to
    your IP address only so nobody else can connect, even if they somehow knew
    your temporary Elastic IP address.
